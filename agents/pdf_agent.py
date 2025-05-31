@@ -19,7 +19,7 @@ class PdfAgent:
     def __init__(self, memory_instance, action_router_instance, model_name: str = "gemini-2.0-flash"): # ADDED memory_instance
         self.memory = memory_instance # Store the memory instance
         self.action_router = action_router_instance # Store the action router instance
-        self.llm = ChatGoogleGenerativeAI(model=model_name, temperature=0.0,google_api_key ="AIzaSyAsBIw0b-EyKGJQNyt-ob6Tq_vSlwhsuJA")
+        self.llm = ChatGoogleGenerativeAI(model=model_name, temperature=0.0,google_api_key =os.getenv("GOOGLE_API_KEY"))
         self.invoice_parser = PydanticOutputParser(pydantic_object=InvoiceData)
         self.policy_parser = PydanticOutputParser(pydantic_object=PolicyData)
 
