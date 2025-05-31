@@ -15,7 +15,7 @@ class EmailAgent:
     def __init__(self, memory_instance, action_router_instance, model_name: str = "gemini-2.0-flash"): # ADDED memory_instance
         self.memory = memory_instance # Store the memory instance
         self.action_router = action_router_instance # Store the action router instance
-        self.llm = ChatGoogleGenerativeAI(model=model_name, temperature=0.0,google_api_key =os.getenv(GOOGLE_API_KEY))
+        self.llm = ChatGoogleGenerativeAI(model=model_name, temperature=0.0,google_api_key =os.getenv("GOOGLE_API_KEY"))
         self.parser = PydanticOutputParser(pydantic_object=EmailContent)
         self.format_instruction = self.parser.get_format_instructions()
 
