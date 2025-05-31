@@ -1,0 +1,312 @@
+<!-- File: /multi_agent_system/templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Agent System Input</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 2em; background-color: #f8f9fa; color: #343a40; line-height: 1.6; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 2em; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h1, h2, h3 { text-align: center; color: #007bff; margin-bottom: 1em; }
+        h2 { border-bottom: 1px solid #dee2e6; padding-bottom: 0.5em; margin-top: 2em; }
+        form { display: flex; flex-direction: column; gap: 1em; margin-bottom: 2em; }
+        label { font-weight: bold; margin-bottom: 0.2em; color: #495057; }
+        input[type="file"], textarea, select {
+            padding: 0.9em; border: 1px solid #ced4da; border-radius: 6px; width: 100%; box-sizing: border-box;
+            font-size: 1em;
+        }
+        button {
+            padding: 1em 1.5em; background-color: #007bff; color: white; border: none; border-radius: 6px;
+            cursor: pointer; font-size: 1.1em; transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,123,255,0.2);
+        }
+        button:hover { background-color: #0056b3; transform: translateY(-1px); }
+        .output-section {
+            background-color: #e9ecef; padding: 1.5em; border-radius: 8px; margin-top: 2em;
+            border: 1px solid #dee2e6;
+        }
+        .output-section h3 {
+            color: #007bff; margin-top: 0; margin-bottom: 1em; border-bottom: 1px dashed #ced4da; padding-bottom: 0.5em;
+        }
+        .output-item { margin-bottom: 0.8em; }
+        .output-item strong { color: #212529; }
+        .success-status { color: #28a745; font-weight: bold; }
+        .error-status { color: #dc3545; font-weight: bold; }
+        .info-status { color: #17a2b8; font-weight: bold; }
+        .card { background-color: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1em; margin-bottom: 1em; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .card-title { font-weight: bold; margin-bottom: 0.5em; color: #333; }
+        .card-content { font-size: 0.9em; }
+        .key-value { display: flex; margin-bottom: 0.4em; }
+        .key-value .key { font-weight: bold; min-width: 120px; color: #495057; }
+        .key-value .value { flex-grow: 1; }
+        .list-item { margin-bottom: 0.2em; }
+        .raw-trace-toggle {
+            display: block; width: 100%; text-align: center; padding: 0.8em; margin-top: 1.5em;
+            background-color: #6c757d; color: white; border-radius: 6px; cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .raw-trace-toggle:hover { background-color: #5a6268; }
+        #full_raw_trace {
+            background-color: #f0f0f0; padding: 1em; border-radius: 6px; margin-top: 1em;
+            word-break: break-all; white-space: pre-wrap; font-family: 'Courier New', Courier, monospace;
+            font-size: 0.85em; overflow-x: auto; max-height: 400px;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #007bff;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin: 1em auto;
+            display: none; /* Hidden by default */
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Multi-Agent System Input Processor</h1>
+
+        <form id="uploadForm">
+            <div>
+                <label for="file">Upload File:</label>
+                <input type="file" id="file" name="file" accept=".txt,.json,.pdf">
+            </div>
+            <div>
+                <label for="raw_content">Or Paste Raw Content:</label>
+                <textarea id="raw_content" name="raw_content" rows="10" placeholder="Enter text, JSON, or email content here..."></textarea>
+            </div>
+            <div>
+                <label for="input_type_hint">Content Type Hint (Optional):</label>
+                <select id="input_type_hint" name="input_type_hint">
+                    <option value="">Auto-detect</option>
+                    <option value="email">Email</option>
+                    <option value="json">JSON</option>
+                    <option value="pdf">PDF</option>
+                </select>
+            </div>
+            <button type="submit">Process Input</button>
+        </form>
+
+        <div class="loading-spinner" id="loadingSpinner"></div>
+
+        <div id="outputDisplay" class="output-section" style="display:none;">
+            <h2>Processing Result</h2>
+            <div class="output-item"><strong class="key">Process ID:</strong> <span id="display_process_id"></span></div>
+            <div class="output-item"><strong class="key">Overall Status:</strong> <span id="display_status"></span></div>
+            <div class="output-item"><strong class="key">Duration:</strong> <span id="display_duration"></span> seconds</div>
+
+            <h3>Classification</h3>
+            <div class="output-item"><strong class="key">Detected Format:</strong> <span id="display_format"></span></div>
+            <div class="output-item"><strong class="key">Detected Intent:</strong> <span id="display_intent"></span></div>
+
+            <div id="agentSpecificOutput"></div>
+
+            <h3>Actions Triggered</h3>
+            <div id="triggeredActions"></div>
+
+            <button class="raw-trace-toggle" onclick="toggleRawTrace()">Show Full Raw Trace</button>
+            <pre id="full_raw_trace" style="display:none;"></pre>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const form = event.target;
+            const formData = new FormData();
+
+            const fileInput = form.querySelector('#file');
+            if (fileInput.files.length > 0) {
+                formData.append('file', fileInput.files[0]);
+            }
+
+            const rawContentInput = form.querySelector('#raw_content');
+            if (rawContentInput.value.trim() !== '') {
+                formData.append('raw_content', rawContentInput.value);
+            }
+
+            const typeHintInput = form.querySelector('#input_type_hint');
+            if (typeHintInput.value !== '') {
+                formData.append('input_type_hint', typeHintInput.value);
+            }
+
+            const outputDisplay = document.getElementById('outputDisplay');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            outputDisplay.style.display = 'none';
+            loadingSpinner.style.display = 'block'; // Show spinner
+
+            try {
+                const response = await fetch('/process_input', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const data = await response.json();
+                loadingSpinner.style.display = 'none'; // Hide spinner
+                outputDisplay.style.display = 'block';
+
+                // Display general info
+                document.getElementById('display_process_id').textContent = data.process_id;
+                document.getElementById('display_status').textContent = data.status;
+                document.getElementById('display_duration').textContent = data.trace.processing_summary?.duration_seconds?.toFixed(2) || 'N/A';
+                
+                // Set status class
+                const statusSpan = document.getElementById('display_status');
+                statusSpan.className = ''; // Reset
+                if (data.status.includes('failed')) {
+                    statusSpan.classList.add('error-status');
+                } else if (data.status.includes('complete') || data.status.includes('processed')) {
+                    statusSpan.classList.add('success-status');
+                } else {
+                    statusSpan.classList.add('info-status');
+                }
+
+                // Display classification
+                const classifierOutput = data.trace.classifier_agent_output || {};
+                document.getElementById('display_format').textContent = classifierOutput.format || 'Unknown';
+                document.getElementById('display_intent').textContent = classifierOutput.intent || 'Unknown';
+
+                // Display agent-specific output
+                const agentSpecificOutputDiv = document.getElementById('agentSpecificOutput');
+                agentSpecificOutputDiv.innerHTML = ''; // Clear previous content
+
+                if (classifierOutput.format === 'Email') {
+                    const emailOutput = data.trace.email_agent_output;
+                    if (emailOutput) {
+                        agentSpecificOutputDiv.innerHTML += `
+                            <h3>Email Agent Output</h3>
+                            <div class="card">
+                                <div class="card-content">
+                                    <div class="key-value"><span class="key">Sender:</span> <span class="value">${emailOutput.sender}</span></div>
+                                    <div class="key-value"><span class="key">Urgency:</span> <span class="value">${emailOutput.urgency}</span></div>
+                                    <div class="key-value"><span class="key">Tone:</span> <span class="value">${emailOutput.tone}</span></div>
+                                    <div class="key-value"><span class="key">Issue/Request:</span> <span class="value">${emailOutput.issue_request}</span></div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                } else if (classifierOutput.format === 'JSON') {
+                    const jsonOutput = data.trace.json_agent_output;
+                    if (jsonOutput) {
+                        agentSpecificOutputDiv.innerHTML += `
+                            <h3>JSON Agent Output</h3>
+                            <div class="card">
+                                <div class="card-content">
+                                    <div class="key-value"><span class="key">Schema Valid:</span> <span class="value">${jsonOutput.is_valid_schema ? 'Yes' : 'No'}</span></div>
+                                    <div class="key-value"><span class="key">Anomalies:</span> <span class="value">${jsonOutput.anomalies.join(', ') || 'None'}</span></div>
+                                    <div class="key-value"><span class="key">Parsed Data:</span> <span class="value"><pre>${JSON.stringify(jsonOutput.parsed_data, null, 2)}</pre></span></div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                } else if (classifierOutput.format === 'PDF') {
+                    const pdfOutput = data.trace.pdf_agent_output;
+                    if (pdfOutput) {
+                        agentSpecificOutputDiv.innerHTML += `
+                            <h3>PDF Agent Output</h3>
+                            <div class="card">
+                                <div class="card-content">
+                                    <div class="key-value"><span class="key">Document Type:</span> <span class="value">${pdfOutput.document_type}</span></div>
+                                    <div class="key-value"><span class="key">Flags:</span> <span class="value">${pdfOutput.flags.join(', ') || 'None'}</span></div>
+                                </div>
+                            </div>
+                        `;
+                        if (pdfOutput.document_type === 'Invoice' && pdfOutput.invoice_data) {
+                             agentSpecificOutputDiv.innerHTML += `
+                                <div class="card">
+                                    <div class="card-title">Invoice Details</div>
+                                    <div class="card-content">
+                                        <div class="key-value"><span class="key">Invoice No.:</span> <span class="value">${pdfOutput.invoice_data.invoice_number}</span></div>
+                                        <div class="key-value"><span class="key">Date:</span> <span class="value">${pdfOutput.invoice_data.date}</span></div>
+                                        <div class="key-value"><span class="key">Total:</span> <span class="value">${pdfOutput.invoice_data.currency} ${pdfOutput.invoice_data.total_amount.toFixed(2)}</span></div>
+                                        <div class="card-title" style="margin-top:1em;">Line Items:</div>
+                                        <ul>
+                                            ${pdfOutput.invoice_data.line_items.map(item => `
+                                                <li class="list-item">${item.description} (Qty: ${item.quantity}, Unit Price: ${item.unit_price.toFixed(2)}, Total: ${item.total.toFixed(2)})</li>
+                                            `).join('')}
+                                        </ul>
+                                    </div>
+                                </div>
+                            `;
+                        } else if (pdfOutput.document_type === 'Policy' && pdfOutput.policy_data) {
+                             agentSpecificOutputDiv.innerHTML += `
+                                <div class="card">
+                                    <div class="card-title">Policy Details</div>
+                                    <div class="card-content">
+                                        <div class="key-value"><span class="key">Title:</span> <span class="value">${pdfOutput.policy_data.policy_title}</span></div>
+                                        <div class="key-value"><span class="key">Policy ID:</span> <span class="value">${pdfOutput.policy_data.policy_id}</span></div>
+                                        <div class="key-value"><span class="key">Keywords:</span> <span class="value">${pdfOutput.policy_data.keywords_found.join(', ') || 'None'}</span></div>
+                                        <div class="key-value"><span class="key">Summary:</span> <span class="value">${pdfOutput.policy_data.summary}</span></div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }
+                } else {
+                     agentSpecificOutputDiv.innerHTML += `
+                        <h3>No Specialized Agent Output</h3>
+                        <div class="card">
+                            <div class="card-content">
+                                <p>No specific agent output available for format "${classifierOutput.format}".</p>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Display triggered actions
+                const triggeredActionsDiv = document.getElementById('triggeredActions');
+                triggeredActionsDiv.innerHTML = '';
+                let hasActions = false;
+                for (const key in data.trace) {
+                    if (key.startsWith('action_triggered:')) {
+                        hasActions = true;
+                        const actionType = key.split(':')[1].replace(/_/g, ' '); // e.g., "CRM Escalation"
+                        const actionData = data.trace[key];
+                        triggeredActionsDiv.innerHTML += `
+                            <div class="card">
+                                <div class="card-title">Action: ${actionType}</div>
+                                <div class="card-content">
+                                    <div class="key-value"><span class="key">Status:</span> <span class="value">${actionData.result.status}</span></div>
+                                    <div class="key-value"><span class="key">Message:</span> <span class="value">${actionData.result.message}</span></div>
+                                    <div class="key-value"><span class="key">Payload:</span> <span class="value"><pre>${JSON.stringify(actionData.payload, null, 2)}</pre></span></div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+                if (!hasActions) {
+                    triggeredActionsDiv.innerHTML = '<p>No specific actions were triggered.</p>';
+                }
+
+
+                // Display full raw trace (initially hidden)
+                document.getElementById('full_raw_trace').textContent = JSON.stringify(data.trace, null, 2);
+
+            } catch (error) {
+                loadingSpinner.style.display = 'none'; // Hide spinner
+                outputDisplay.style.display = 'block';
+                document.getElementById('outputDisplay').innerHTML = `<h2 class="error-status">An Error Occurred</h2><p class="error-status">${error.message}</p>`;
+            }
+        });
+
+        function toggleRawTrace() {
+            const rawTraceDiv = document.getElementById('full_raw_trace');
+            const toggleButton = document.querySelector('.raw-trace-toggle');
+            if (rawTraceDiv.style.display === 'none') {
+                rawTraceDiv.style.display = 'block';
+                toggleButton.textContent = 'Hide Full Raw Trace';
+            } else {
+                rawTraceDiv.style.display = 'none';
+                toggleButton.textContent = 'Show Full Raw Trace';
+            }
+        }
+    </script>
+</body>
+</html>

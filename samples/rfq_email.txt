@@ -1,0 +1,21 @@
+
+From: procurement@bizcorp.com
+Subject: Request for Quotation - Server Hardware Upgrade
+Date: Mon, 27 Nov 2023 11:30:00 +0000
+
+Dear Sales Team,
+
+We are BizCorp, a rapidly expanding tech company, and we are planning a significant upgrade to our server infrastructure in Q1 2024. We are looking for competitive quotations for the following hardware components:
+
+1.  20 x High-Performance Server Units (Rack-mountable, Intel Xeon Gold equivalent or better, 256GB RAM, 2TB SSD)
+2.  5 x Network Switches (48-port, 10GbE SFP+ uplinks)
+3.  Necessary cabling and rack accessories
+
+Please provide a detailed quotation including unit prices, bulk discounts (for orders of 10+ units), lead times, warranty information, and any recommended installation services.
+
+We require the quote by December 15, 2023. Feel free to contact me for any clarifications.
+
+Best Regards,
+Jane Doe
+Procurement Manager
+BizCorp
